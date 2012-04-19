@@ -1,4 +1,4 @@
-package A2;
+package a2;
 
 import java.util.Observable;
 
