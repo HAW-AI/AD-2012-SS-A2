@@ -16,7 +16,7 @@ class ParkplatzImpl implements Parking {
     private final Controlsystem ls;
     
     ParkplatzImpl(Controlsystem ls) {
-        leaveMap = new HashMap<>();
+        leaveMap = new HashMap<Integer, Set<Car>>();
         this.ls = ls;
     }
     
