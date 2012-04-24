@@ -20,6 +20,7 @@ class Controlsystem  {
     private int currentTime;
     final private int maxDuration;
     final private int intervalBetweenCars = 3;
+    boolean terminated;
 
     Controlsystem(int tB, Timer t, int maxDuration) {
         inQueue = new LinkedList<Car>();
@@ -28,6 +29,7 @@ class Controlsystem  {
         this.tB = tB;
         this.parking = new Parking(this);
         this.maxDuration = maxDuration;
+        terminated = false;
     }
 
     private Controlsystem(Controlsystem cs) {
@@ -37,6 +39,12 @@ class Controlsystem  {
         inQueue = new LinkedList<Car>(cs.inQueue);
         outQueue = new LinkedList<Car>(cs.outQueue);
         tlc = new TrafficLightController(cs.tlc);
+        terminated = cs.terminated;
+    }
+    
+    @Override
+    public String toString() {
+        return "InQueue: " + inQueue.size() +  " " + tlc.toString() + " OutQueue:" + outQueue.size() + " Parkplatz:" + parking.getParkingCars();
     }
     
     
@@ -51,6 +59,20 @@ class Controlsystem  {
 
     void addToExitQueue(Car car) {
             outQueue.add(car);
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if(this == o) return true;
+        if(o == null) return false;
+        if(getClass() == o.getClass()) {
+            Controlsystem s = (Controlsystem) o;
+            return (inQueue.equals(s.inQueue) &&
+                    outQueue.equals(s.outQueue) &&
+                    tlc.constructionRoad.equals(s.tlc.constructionRoad));
+            
+        }
+        return false;
     }
 
     boolean manageTraffic() {
@@ -100,7 +122,7 @@ class Controlsystem  {
         private States nextState;	//vom Leitsystem vorgegebener State
         private int askAgain;				//n�chste anfrage an leitsystem
         private int waitUntil;				//internes warten bei state wechsel
-        private Map<Integer, Car> constructionRoad = new HashMap<Integer, Car>(); //Baustellendurchfahrt Abbildung Ausfahrtzeit => Auto
+        private Map<Integer, Pair<States,Car>> constructionRoad = new HashMap<Integer, Pair<States,Car>>(); //Baustellendurchfahrt Abbildung Ausfahrtzeit => Auto
 
         TrafficLightController() {
             currentState = NONE;
@@ -112,13 +134,18 @@ class Controlsystem  {
             nextState = tlc.nextState;
             askAgain = tlc.askAgain;
             waitUntil = tlc.waitUntil;
-            for(Entry<Integer, Car> entry : tlc.constructionRoad.entrySet()) {
+            for(Entry<Integer, Pair<States,Car>> entry : tlc.constructionRoad.entrySet()) {
                 constructionRoad.put(entry.getKey(), entry.getValue());
             }
         }
         
+        @Override
+        public String toString() {
+            return "Ampel: " + this.currentState + " Straße:" + this.constructionRoad.entrySet().size();
+        }
+        
         void driveIn(Car car) {
-                constructionRoad.put(currentTime+tB, car);
+                constructionRoad.put(currentTime+tB, new Pair<States, Car>(currentState, car));
         }
 
         void setGreen(States newState, int duration) {
@@ -143,11 +170,11 @@ class Controlsystem  {
             if(o instanceof Timer && arg != null && arg instanceof Integer) {
                 int timestamp = (Integer) arg;
                 currentTime = timestamp;
-                if(timestamp == waitUntil) {
+                if(timestamp >= waitUntil) {
                     currentState = nextState;
-                    if(timestamp == askAgain) {
+                    if(timestamp >= askAgain) {
                         if(!Controlsystem.this.manageTraffic()) {
-                                System.out.println("Simulation beendet nach "+currentTime);
+                                terminated = true;
                         }
                     }	
                 }
@@ -159,10 +186,10 @@ class Controlsystem  {
                     }
                 }
                 if (constructionRoad.containsKey(currentTime)) {
-                    Car auto = constructionRoad.get(currentTime);
+                    Pair<States,Car> pair = constructionRoad.get(currentTime);
                     constructionRoad.remove(currentTime);
-                    if (currentState == IN)
-                            parking.parkCar(auto, auto.getParkingDuration() + currentTime);
+                    if (pair.getKey() == IN)
+                            parking.parkCar(pair.getValue(), pair.getValue().getParkingDuration() + currentTime);
                 }
             }
         }

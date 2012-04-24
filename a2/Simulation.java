@@ -26,6 +26,16 @@ class SimulationImpl implements Simulation {
         timer.addObserver(street);
     }
     
+    SimulationImpl(int a1, int a2, int e1, int e2, int tb, int maxDuration) {
+        io = new IOManager();
+        timer = new Timer();
+        cs = new Controlsystem(tb, timer, maxDuration);
+        street = new Street(cs, a1, a2, e1, e2);
+        timer.addObserver(cs.parking);
+        timer.addObserver(cs.tlc);
+        timer.addObserver(street);        
+    }
+    
     private SimulationImpl() {
         timer = null;
         io = null;
@@ -35,12 +45,12 @@ class SimulationImpl implements Simulation {
 
     @Override
     public boolean simulationFinished() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return cs.terminated;
     }
 
     @Override
     public String getStateSummary() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return timer.toString() + ": " + cs.toString();
     }
 
     @Override
@@ -55,7 +65,13 @@ class SimulationImpl implements Simulation {
 
     @Override
     public Simulation nextChangedStep() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (cs.terminated)
+            return this;
+        SimulationImpl copySimulation = this.clone();
+        while(this.equals(copySimulation) && !copySimulation.cs.terminated) {
+            copySimulation.nextImpStep(1);
+        }
+        return copySimulation;
     }
     
     @Override
@@ -65,12 +81,12 @@ class SimulationImpl implements Simulation {
         sim.timer = timer.clone();
         sim.cs = cs.clone();
         sim.street = street.clone();
-        sim.street.cs = cs;
+        sim.street.cs = sim.cs;
     
-        timer.addObserver(cs.parking);
-        timer.addObserver(cs.tlc);
-        timer.addObserver(street);
-        return null;
+        sim.timer.addObserver(sim.cs.parking);
+        sim.timer.addObserver(sim.cs.tlc);
+        sim.timer.addObserver(sim.street);
+        return sim;
     }
 
     private Simulation nextImpStep(int stepcount) {
@@ -82,6 +98,12 @@ class SimulationImpl implements Simulation {
     
     @Override
     public boolean equals(Object o) {
+        if(this == o) return true;
+        if(o == null) return false;
+        if(getClass() == o.getClass()) {
+            SimulationImpl s = (SimulationImpl) o;
+            return cs.equals(s.cs);
+        }
         return false;
     }
 }

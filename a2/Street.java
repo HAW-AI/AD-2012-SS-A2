@@ -33,7 +33,7 @@ class Street implements Observer {
     public void update(Observable o, Object arg) {
         if(o instanceof Timer && !(arg == null) && arg instanceof Integer && (Integer)arg <= 36000 && (Integer)arg >= 0){
            int timestamp = (Integer) arg;
-           if (timestamp == nextCar) {
+           if (timestamp >= nextCar) {
                if (timestamp != 1){
                 cs.addToEntryQueue(new Car(rand.nextInt(maxParkduration-minParkduration) + minParkduration));
                }
