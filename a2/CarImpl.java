@@ -1,6 +1,6 @@
 package a2;
 
-public class CarImpl implements Car {
+class CarImpl implements Car {
 	private final int parkingDuration;
 
 	CarImpl(int parkingDuration) {

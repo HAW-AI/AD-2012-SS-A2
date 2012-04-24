@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public interface Parking extends Observer {
+    public final int space = 150;
     public void parkCar(Car auto, int abfahrtZeit);
     public int getParkingCars(); //Gibt nur die Anzahl der parkenden Autos zurück. Ausfahrende Autos werden nicht gezählt
 }
@@ -15,9 +16,10 @@ class ParkplatzImpl implements Parking {
     private Map<Integer, Set<Car>> leaveMap;
     private final Controlsystem ls;
     
-    ParkplatzImpl(Controlsystem ls) {
+    ParkplatzImpl(Controlsystem ls, Timer t) {
         leaveMap = new HashMap<Integer, Set<Car>>();
         this.ls = ls;
+        t.addObserver(this);
     }
     
     @Override

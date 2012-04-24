@@ -1,6 +1,8 @@
 package a2;
 
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Queue;
@@ -34,29 +36,12 @@ public class ControlsystemImpl implements Controlsystem {
 	public void addToExitQueue(Car car) {
 		outQueue.add(car);
 	}
-	
-	private void carsPark(int time) {
-		int quantity = time/intervalBetweenCars;
-		for(int i = 0; i <= quantity; i++) {
-			Car car = inQueue.poll();
-			parking.parkCar(car,currentTime+tB+car.getParkingDuration()+intervalBetweenCars*i);
-		}
-	}
-	
-	private void carsLeave(int time) {
-		int quantity = time/intervalBetweenCars;
-		for(int i = 0; i <= quantity; i++) {
-			outQueue.poll();
-		}
-	}
 
-	//doppelte aufrufe in var speichern
-	//func fuer math.min(bound,x)
 	@Override
 	public boolean manageTraffic() {
-		int inQueueAsTime = (inQueue.size()-1)*intervalBetweenCars+1;					//time needed to dequeue all cars in inQueue
-		int outQueueAsTime = (outQueue.size()-1)*intervalBetweenCars+1;					//time needed to dequeue all cars in outQueue
-		int stateTime;																	//contains time that the chosen state will last
+		int inCount = Math.min(inQueue.size(), Parking.space-(outQueue.size()+parking.getParkingCars())); //zahl der Autos aus der Inqueue, die noch platz aufm dem parkplatz haben
+		int inCountAsTime = (inCount-1)*intervalBetweenCars+1;											//zeit um alle autos auf den Parkplatz fahren zu lassen, die noch Platz haben
+		int outQueueAsTime = (outQueue.size()-1)*intervalBetweenCars+1;					//zeit um alle autos vom Parkplatz fahren zu lassen (aus der Outqueue)												
 		if (currentTime >= Timer.CLOSETIME) {											//checks if it's time to close (no one can enter after this point)
 			if (outQueue.isEmpty()) {
 				if (parking.getParkingCars() == 0) {
@@ -66,40 +51,27 @@ public class ControlsystemImpl implements Controlsystem {
 				}
 			} else {
 				tlc.setGreen(OUT, outQueueAsTime);
-				carsLeave(outQueueAsTime);
 			}
 		} else {
 			if (outQueue.isEmpty()) {
-				if(inQueue.isEmpty() || parking.getParkingCars() == 150) {
+				if(inQueue.isEmpty() || parking.getParkingCars() == Parking.space) {
 					tlc.setGreen(NONE, 1);
 				} else {
-					stateTime = Math.min(150-parking.getParkingCars(),inQueueAsTime);
-					tlc.setGreen(IN, stateTime);
-					carsPark(stateTime);
+					tlc.setGreen(IN, Math.min(maxDuration,inCountAsTime));
 				}
 			} else {
-				if(inQueue.isEmpty() || parking.getParkingCars() == 150) {
-					tlc.setGreen(OUT, outQueueAsTime);
-					carsLeave(outQueueAsTime);
-				} else {
-					int inCount = Math.min(inQueue.size(), 150-(outQueue.size()+parking.getParkingCars()));
+				if(inQueue.isEmpty() || parking.getParkingCars()+outQueue.size() == Parking.space) {
+					tlc.setGreen(OUT, Math.min(maxDuration,outQueueAsTime));
+				} else {																//autos wollen (und koennen) rein + autos wollen raus
 					if(tlc.currentState == OUT) {
-						stateTime = Math.min(maxDuration,(inCount-1)*intervalBetweenCars+1);
-						tlc.setGreen(IN, stateTime);
-						carsPark(stateTime);
-					} else if(tlc.currentState == IN){
-						stateTime = Math.min(maxDuration,outQueueAsTime);
-						tlc.setGreen(OUT,stateTime);
-						carsLeave(stateTime);
+						tlc.setGreen(IN, Math.min(maxDuration,inCountAsTime));
+					} else if(tlc.currentState == IN){		
+						tlc.setGreen(OUT,Math.min(maxDuration,outQueueAsTime));
 					} else {
 						if(inCount > outQueue.size()) {
-							stateTime = Math.min(maxDuration,(inCount-1)*intervalBetweenCars+1);
-							tlc.setGreen(IN, stateTime);
-							carsPark(stateTime);
+							tlc.setGreen(IN, Math.min(maxDuration,inCountAsTime));
 						} else {
-							stateTime = Math.min(maxDuration,outQueueAsTime);
-							tlc.setGreen(OUT, stateTime);
-							carsLeave(stateTime);
+							tlc.setGreen(OUT, Math.min(maxDuration,outQueueAsTime));
 						}
 					}
 				}
@@ -115,7 +87,14 @@ public class ControlsystemImpl implements Controlsystem {
 		private States nextState = NONE;	//vom Leitsystem vorgegebener State
 		private int askAgain;				//n�chste anfrage an leitsystem
 		private int waitUntil;				//internes warten bei state wechsel
-
+		private Map<Integer, Car> constructionRoad = new HashMap<Integer, Car>(); //Baustellendurchfahrt Abbildung Ausfahrtzeit => Auto
+		
+		public void driveIn(Car car) {
+			constructionRoad.put(currentTime+tB, car);
+		}
+		
+		
+		
 		public void setGreen(States newState, int duration) {
 			if (currentState != newState && currentState != States.NONE) {
 				currentState = NONE;
@@ -146,8 +125,27 @@ public class ControlsystemImpl implements Controlsystem {
 						}
 					}	
 				}
+				if((askAgain-currentTime)%3 == 1 ) {
+					if(currentState == IN) {
+						driveIn(inQueue.poll());
+					} else if(currentState == OUT) {
+						driveIn(outQueue.poll());
+					}
+				}
+				if (constructionRoad.containsKey(currentTime)) {
+					Car auto = constructionRoad.get(currentTime);
+					constructionRoad.remove(currentTime);
+					if (currentState == IN)
+						parking.parkCar(auto, auto.getParkingDuration() + currentTime);
+				}
 			}
 		}
+		
+		
 	}
+	
+	
+	
+	
 
 }
