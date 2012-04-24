@@ -15,10 +15,10 @@ class SimulationImpl implements Simulation {
     private Controlsystem cs;
     private Street street;
     
-    public SimulationImpl(String filepath) {
-        io = new IOManager();
+    public SimulationImpl(IOManager io) {
+        this.io = io;
         timer = new Timer();
-        int[] data = io.readSimFile(filepath);
+        int[] data = io.readSimFile();
         cs = new Controlsystem(data[4], timer, data[5]);
         street = new Street(cs, data[0], data[1], data[2], data[3]);
         timer.addObserver(cs.parking);
@@ -26,8 +26,8 @@ class SimulationImpl implements Simulation {
         timer.addObserver(street);
     }
     
-    SimulationImpl(int a1, int a2, int e1, int e2, int tb, int maxDuration) {
-        io = new IOManager();
+    SimulationImpl(int a1, int a2, int e1, int e2, int tb, int maxDuration, IOManager io) {
+        this.io = io;
         timer = new Timer();
         cs = new Controlsystem(tb, timer, maxDuration);
         street = new Street(cs, a1, a2, e1, e2);

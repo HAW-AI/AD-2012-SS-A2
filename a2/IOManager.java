@@ -11,22 +11,24 @@ import java.sql.Timestamp;
 
 /**
  * returns:
- * int[a1, a2, e1, e2, t] if input ok
+ * int[a1, a2, e1, e2, t, maxDuration] if input ok
  * else returns:
- * int[]
+ * standard values: [60, 300, 600, 1200, 60, 120]
  */
 
-class IOManager {
+public class IOManager {
     private final File logFile;
-    public IOManager() {
+    private final String filePath;
+    public IOManager(String filePath) {
+    	this.filePath = filePath;
         Timestamp tstamp = new Timestamp(System.currentTimeMillis());
         logFile = new File("SimResult_" + tstamp.toString().replace(":", "-") + ".txt");
     }
 
-    public int[] readSimFile(String path) {
+    public int[] readSimFile() {
         int[] inputVars = new int[6];
         try {
-            BufferedReader input = new BufferedReader(new InputStreamReader(new FileInputStream(path)));
+            BufferedReader input = new BufferedReader(new InputStreamReader(new FileInputStream(filePath)));
             try {
                 String[] sAry = input.readLine().split(",");
                 for (int i = 0; i < sAry.length; i++) {

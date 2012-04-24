@@ -33,6 +33,6 @@ public class Timer extends Observable {
         seconds -= hours * 3600;
         minutes = seconds / 60;
         seconds -= minutes * 60;
-        return "" + hours + ":" + minutes + ":" + seconds;       
+        return "" + String.format("%02d", hours) + ":" + String.format("%02d",minutes) + ":" + String.format("%02d",seconds);       
     }
 }

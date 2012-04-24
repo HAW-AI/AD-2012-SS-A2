@@ -11,8 +11,7 @@ class Street implements Observer {
     private int nextCar = 1;
     private Random rand = new Random();
     
-    Street(Controlsystem cs, int createStart, int createEnd, int minParkduration,
-            int maxParkduration){
+    Street(Controlsystem cs, int createStart, int createEnd, int minParkduration, int maxParkduration){
         this.cs = cs;
         this.createStart = createStart;
         this.createEnd = createEnd;
@@ -35,7 +34,7 @@ class Street implements Observer {
            int timestamp = (Integer) arg;
            if (timestamp >= nextCar) {
                if (timestamp != 1){
-                cs.addToEntryQueue(new Car(rand.nextInt(maxParkduration-minParkduration) + minParkduration));
+                cs.addToEntryQueue(new Car(rand.nextInt(maxParkduration-minParkduration+1) + minParkduration-1));
                }
                nextCar = createRandInt(timestamp) + timestamp;
            }
@@ -48,7 +47,7 @@ class Street implements Observer {
      * @return die Dauer, nach der das nächste Auto erstellt werdne soll
      */
     private int createRandInt(int time) {
-        int chosenValue = (int)Math.round((time/Timer.CLOSETIME-0.5) * (createEnd - createStart) + (rand.nextInt(createEnd-createStart)+createStart));
+        int chosenValue = (int)Math.round((time/Timer.CLOSETIME-0.5) * (createEnd - createStart) + (rand.nextInt(createEnd-createStart+1)+createStart-1));
         if (chosenValue < createStart) //Grenzen verlassen?
             return createStart;
         if (chosenValue > createEnd) //Grenzen verlassen?

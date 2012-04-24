@@ -149,16 +149,21 @@ class Controlsystem  {
         }
 
         void setGreen(States newState, int duration) {
-                if (currentState != newState && currentState != States.NONE) {
-                        currentState = NONE;
-                        nextState = newState;
-                        waitUntil = currentTime+tB;
-                        askAgain = waitUntil+duration;
-                } else if (currentState == States.NONE) {
+                 if (currentState == NONE) {
                         currentState = newState;
                         nextState = newState;
                         waitUntil = currentTime;
                         askAgain = currentTime+duration;
+                } else if (newState == NONE ){
+                        currentState = newState;
+                        nextState = currentState;
+                        waitUntil = currentTime;
+                        askAgain = waitUntil+3;
+                } else if (currentState != newState) {
+                        currentState = NONE;
+                        nextState = newState;
+                        waitUntil = currentTime+tB;
+                        askAgain = waitUntil+duration;
                 } else {
                         waitUntil = currentTime;
                         askAgain = currentTime+duration;

@@ -4,16 +4,15 @@
  */
 package a2;
 
-/**
- *
- * @author David
- */
+
 public class Runner {
     public static void main(String[] args) {
-        Simulation sim = new SimulationImpl(5,10,20,30,40,120);
+    	IOManager io = new IOManager("Sim1.txt");
+        Simulation sim = new SimulationImpl(io);
         while(!sim.simulationFinished()) {
             sim = sim.nextChangedStep();
-            System.out.println(sim.getStateSummary());
+//            io.logToConsole(sim.getStateSummary());
+            io.logToFile(sim.getStateSummary());
         }
     }
 }
