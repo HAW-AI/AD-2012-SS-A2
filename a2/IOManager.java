@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.sql.Timestamp;
 
 /**
+ * Eingabeformat: [m|s]a1,[m|s]a2,[m|s]e1,[m|s]e2,[m|s]tb,[m|s]maxDuration
  * returns:
  * int[a1, a2, e1, e2, t, maxDuration] if input ok
  * else returns:
@@ -19,13 +20,23 @@ import java.sql.Timestamp;
 public class IOManager {
     private final File logFile;
     private final String filePath;
+    
+    /**
+     * Erstellt den IOManager zur Ausgabe ins Logfile und auf die Konsole
+     * Erzeugt die Ausgabedatei
+     * @param filePath der Pfad zur Eingabedatei relativ zum src-Verzeichnis
+     */
     public IOManager(String filePath) {
     	this.filePath = filePath;
         Timestamp tstamp = new Timestamp(System.currentTimeMillis());
         logFile = new File("SimResult_" + tstamp.toString().replace(":", "-") + ".txt");
     }
 
-    public int[] readSimFile() {
+    /**
+     * Liest die Einstellungen aus der im Konstruktor übergebenen Eingabedatei und 
+     * @return int[6]-Array, welches die einzelnen Werte als Sekunden enthält
+     */
+    int[] readSimFile() {
         int[] inputVars = new int[6];
         try {
             BufferedReader input = new BufferedReader(new InputStreamReader(new FileInputStream(filePath)));
@@ -48,6 +59,10 @@ public class IOManager {
         return inputVars;
     }
 
+    /**
+     * Schreibt den String ins Logfile
+     * @param logString der String, der ins Logfile geschrieben werden soll
+     */
     public void logToFile(String logString) {
         try {
             // new FileWriter(file ,true) - falls die Datei bereits existiert
@@ -68,10 +83,20 @@ public class IOManager {
         }
     }
 
+    /**
+     * Gibt einen String auf der Konsole aus
+     * @param logString der String, der auf der Konsole ausgegeben werden soll
+     */
     public void logToConsole(String logString) {
         System.out.println(logString);
     }
 
+    /**
+     * Prüft das aus der Datei ausgelesene Array auf korrekte Werte
+     * Diese Prüfung wird on readSimFile() aufgerufen
+     * @param ary das in readSimFile() erzeugte int[]-Array
+     * @return true, falls das Array gültig ist, ansonsten false
+     */
     private boolean testArray(int[] ary) {
         int[] aryCopy = ary.clone();
         // 1. Auf CLOSETIME prüfen und positive Werte

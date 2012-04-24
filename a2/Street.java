@@ -4,14 +4,29 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Random;
 
+/**
+ * Diese Klasse repräsentiert die Hauptstraße von der in einem bestimmten Intervall
+ * neue Autos ankommen.
+ * Die Erzeugung der Autos geschieht im Interval [a1,a2].
+ * Der daraus ermittelte zufällige Wert wird linear mit der Tageszeit verrechnet.
+ * => Morgens kommen mehr Autos, als kurz vor Ladenschluss
+ */
 class Street implements Observer {
     
     Controlsystem cs;
     private final int createStart, createEnd, minParkduration, maxParkduration;
+    private final Random rand = new Random();
     private int nextCar = 1;
-    private Random rand = new Random();
     
-    Street(Controlsystem cs, int createStart, int createEnd, int minParkduration, int maxParkduration){
+    /**
+     * 
+     * @param cs das Controlsystem an welches die Hauptstraße gebunden werden soll
+     * @param createStart = a1
+     * @param createEnd = a2
+     * @param minParkduration = e1
+     * @param maxParkduration = e2
+     */
+    Street(Controlsystem cs, int createStart/*a1*/, int createEnd/*a2*/, int minParkduration/*e1*/, int maxParkduration/*e2*/){
         this.cs = cs;
         this.createStart = createStart;
         this.createEnd = createEnd;
@@ -19,6 +34,10 @@ class Street implements Observer {
         this.maxParkduration = maxParkduration;
     }
     
+    /**
+     * Privater Copy-Konstruktor, der von clone() benötigt wird.
+     * @param s 
+     */
     private Street(Street s) {
         cs = null;
         createStart = s.createStart;

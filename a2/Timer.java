@@ -2,19 +2,32 @@ package a2;
 
 import java.util.Observable;
 
-public class Timer extends Observable {
+/** 
+ * Die Timerklasse ist der Zeitgeber der gesammten Simulation. 
+ * Ein Step wird in der Simulation auf eine Sekunde abgebildet
+ */
+class Timer extends Observable {
     private int stepcount;
-    public static final int CLOSETIME = 36000;
+    static final int CLOSETIME = 36000;
 
-    public Timer() {
+    Timer() {
         stepcount = 0;
     }
     
-    private Timer(int stepcount) {
-        this.stepcount = stepcount;
+    /**
+     * Privater Copy-Konstruktor, der intern für die Implementierung von
+     * clone benutzt wird.
+     * @param other Der zu kopierende Timer 
+     */
+    private Timer(Timer other) {
+        this.stepcount = other.stepcount;
     }
 
-    public void step() {
+    /**
+     * Destruktive Methode, die den internen Stepcount erhöht und alle
+     * Observer(Street,Parking,TrafficLightController) benachrichtigt.
+     */
+    void step() {
         stepcount += 1;
         setChanged();
         notifyObservers(stepcount);
@@ -22,7 +35,7 @@ public class Timer extends Observable {
     
     @Override
     public Timer clone() {
-        return new Timer(stepcount);
+        return new Timer(this);
     }
     
     @Override 

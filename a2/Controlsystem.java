@@ -44,7 +44,7 @@ class Controlsystem  {
     
     @Override
     public String toString() {
-        return "InQueue: " + inQueue.size() +  " " + tlc.toString() + " OutQueue:" + outQueue.size() + " Parkplatz:" + parking.getParkingCars();
+        return "InQueue: " + String.format("%5d", inQueue.size()) +  " " + tlc.toString() + " OutQueue:" + String.format("%5d", outQueue.size()) + " Parkplatz:" + String.format("%5d", parking.getParkingCars());
     }
     
     
@@ -141,7 +141,7 @@ class Controlsystem  {
         
         @Override
         public String toString() {
-            return "Ampel: " + this.currentState + " Straße:" + this.constructionRoad.entrySet().size();
+            return "Ampel: " + this.currentState + " Straße:" + String.format("%5d", this.constructionRoad.entrySet().size());
         }
         
         void driveIn(Car car) {
