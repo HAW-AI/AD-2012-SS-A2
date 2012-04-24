@@ -1,17 +1,11 @@
-package a2_v2;
-
-import static a2.States.NONE;
+package a2;
 
 import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Queue;
 
-import a2.Car;
-import a2.Controlsystem;
-import a2.States;
 import static a2.States.*;
-import a2.TrafficLightController;
 
 public class ControlsystemImpl implements Controlsystem {
 
@@ -119,7 +113,7 @@ public class ControlsystemImpl implements Controlsystem {
 
 		private States currentState = NONE;	//momentaner State
 		private States nextState = NONE;	//vom Leitsystem vorgegebener State
-		private int askAgain;				//nächste anfrage an leitsystem
+		private int askAgain;				//nï¿½chste anfrage an leitsystem
 		private int waitUntil;				//internes warten bei state wechsel
 
 		public void setGreen(States newState, int duration) {
@@ -142,7 +136,7 @@ public class ControlsystemImpl implements Controlsystem {
 		@Override
 		public void update(Observable o, Object arg) {
 			if(o instanceof Timer && arg != null && arg instanceof Integer) {
-				int timestamp = (int) arg;
+				int timestamp = (Integer) arg;
 				currentTime = timestamp;
 				if(timestamp == waitUntil) {
 					currentState = nextState;
