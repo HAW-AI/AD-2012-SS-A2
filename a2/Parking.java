@@ -2,39 +2,40 @@ package a2;
 
 import java.util.*;
 import java.util.Map.Entry;
-
-public interface Parking extends Observer {
-    public final int space = 150;
-    public void parkCar(Car auto, int abfahrtZeit);
-    public int getParkingCars(); //Gibt nur die Anzahl der parkenden Autos zurück. Ausfahrende Autos werden nicht gezählt
-}
-
 /** Package-Private implementierung des Parkplatzes
  * 
  */
-class ParkplatzImpl implements Parking {
+class Parking implements Observer {
+    public final static int space = 150;
     private Map<Integer, Set<Car>> leaveMap;
-    private final Controlsystem ls;
+    private final Controlsystem cs;
     
-    ParkplatzImpl(Controlsystem ls, Timer t) {
+    Parking(Controlsystem cs) {
         leaveMap = new HashMap<Integer, Set<Car>>();
-        this.ls = ls;
-        t.addObserver(this);
+        this.cs = cs;
+    }
+    
+    Parking(Parking p, Controlsystem cs) {
+        leaveMap = new HashMap<Integer, Set<Car>>();
+        this.cs = cs;
+        
+        for(Entry<Integer, Set<Car>> entry : p.leaveMap.entrySet()) {
+            leaveMap.put(entry.getKey(), new HashSet<Car>(entry.getValue()));
+        }
     }
     
     @Override
     public void update(Observable o, Object arg) {
-        if (o == ls && arg != null && arg instanceof Integer) {
+        if (arg != null && arg instanceof Integer) {
             Integer timestamp = (Integer) arg;
             if (leaveMap.containsKey(timestamp)) {
                 for(Car auto : leaveMap.get(timestamp))
-                    ls.addToExitQueue(auto);
+                    cs.addToExitQueue(auto);
                 leaveMap.remove(timestamp);
             }
         }
     }
 
-    @Override
     public int getParkingCars() {
         int cars = 0;
         for(Entry<Integer,Set<Car>> e : leaveMap.entrySet()) {
@@ -43,7 +44,6 @@ class ParkplatzImpl implements Parking {
         return cars;
     }
 
-    @Override
     public void parkCar(Car auto, int abfahrtZeit) {
         if (leaveMap.containsKey(abfahrtZeit))
             leaveMap.get(abfahrtZeit).add(auto);
@@ -53,6 +53,4 @@ class ParkplatzImpl implements Parking {
             leaveMap.put(abfahrtZeit, set);
         }
     }
-    
-    
 }

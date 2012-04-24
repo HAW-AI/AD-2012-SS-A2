@@ -1,5 +1,14 @@
 package a2;
 
-public interface Car {
-    public int getParkingDuration(); //Liefert die Parkdauer in Sekunden zurück
+class Car {
+	private final int parkingDuration;
+
+	Car(int parkingDuration) {
+		this.parkingDuration = parkingDuration;
+	}
+
+	public int getParkingDuration() {
+		return parkingDuration;
+	}
+
 }
