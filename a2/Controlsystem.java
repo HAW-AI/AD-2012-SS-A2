@@ -65,7 +65,8 @@ class Controlsystem  {
      */
     @Override
     public String toString() {
-        return "InQueue: " + String.format("%5d", inQueue.size()) +  " " + tlc.toString() + " OutQueue:" + String.format("%5d", outQueue.size()) + " Parkplatz:" + String.format("%5d", parking.getParkingCars());
+        int p = parking.getParkingCars();
+        return "InQueue: " + String.format("%5d", inQueue.size()) +  " " + tlc.toString() + " OutQueue:" + String.format("%5d", outQueue.size()) + " Parkplatz:" + String.format("%5d", p) + (p > Parking.space ? " !!!FEHLER!!!" : "");
     }
     
     
@@ -119,15 +120,16 @@ class Controlsystem  {
      * @return false, falls die Simulation vorbei ist, ansonsten true
      */
     boolean manageTraffic() {
-        int inCount = Math.min(inQueue.size(), Parking.space-(outQueue.size()+parking.getParkingCars())); //zahl der Autos aus der Inqueue, die noch platz aufm dem parkplatz haben
-        int inCountAsTime = (inCount-1)*intervalBetweenCars+1;											//zeit um alle autos auf den Parkplatz fahren zu lassen, die noch Platz haben
-        int outQueueAsTime = (outQueue.size()-1)*intervalBetweenCars+1; //zeit um alle autos vom Parkplatz fahren zu lassen (aus der Outqueue)												
         int incommingCars = 0;
         if (tlc.constructionRoad.entrySet().size() > 0) {
             Iterator<Entry<Integer, Pair<States, Car>>> i = tlc.constructionRoad.entrySet().iterator();
             if (i.hasNext() && i.next().getValue().getKey() == IN)
                 incommingCars = tlc.constructionRoad.entrySet().size();
         }
+        int inCount = Math.min(inQueue.size(), Parking.space-(outQueue.size()+incommingCars+parking.getParkingCars())); //zahl der Autos aus der Inqueue, die noch platz aufm dem parkplatz haben
+        int inCountAsTime = (inCount-1)*intervalBetweenCars+1;											//zeit um alle autos auf den Parkplatz fahren zu lassen, die noch Platz haben
+        int outQueueAsTime = (outQueue.size()-1)*intervalBetweenCars+1; //zeit um alle autos vom Parkplatz fahren zu lassen (aus der Outqueue)												
+        
         if (currentTime >= Timer.CLOSETIME) {											//checks if it's time to close (no one can enter after this point)
             if (outQueue.isEmpty()) {
                 if (parking.getParkingCars() == 0) {
@@ -140,13 +142,13 @@ class Controlsystem  {
             }
         } else {
             if (outQueue.isEmpty()) {
-                if(inQueue.isEmpty() || parking.getParkingCars()+incommingCars == Parking.space) {
+                if(inQueue.isEmpty() || parking.getParkingCars()+incommingCars >= Parking.space) {
                     tlc.setGreen(NONE, 1);
                 } else {
                     tlc.setGreen(IN, Math.min(maxDuration,inCountAsTime));
                 }
             } else {
-                if(inQueue.isEmpty() || parking.getParkingCars()+outQueue.size()+incommingCars == Parking.space) {
+                if(inQueue.isEmpty() || parking.getParkingCars()+outQueue.size()+incommingCars >= Parking.space) {
                     tlc.setGreen(OUT, Math.min(maxDuration,outQueueAsTime));
                 } else {																//autos wollen (und koennen) rein + autos wollen raus
                     if(tlc.currentState == OUT) {
@@ -197,6 +199,8 @@ class Controlsystem  {
             askAgain = tlc.askAgain;
             waitUntil = tlc.waitUntil;
             for(Entry<Integer, Pair<States,Car>> entry : tlc.constructionRoad.entrySet()) {
+                if (entry.getValue() == null)
+                    System.out.println("TrafficLightController(tlc)");
                 constructionRoad.put(entry.getKey(), entry.getValue());
             }
         }
@@ -213,7 +217,7 @@ class Controlsystem  {
          * @param car das Auto, dass in die Baustellendurchfahrt einfahren soll
          */
         void driveIn(Car car) {
-                constructionRoad.put(currentTime+tB, new Pair<States, Car>(currentState, car));
+            constructionRoad.put(currentTime+tB, new Pair<States, Car>(currentState, car));
         }
 
         /**
@@ -222,25 +226,41 @@ class Controlsystem  {
          * @param duration Dauer der neuen Ampelphase
          */
         void setGreen(States newState, int duration) {
-                 if (currentState == NONE) {
+             if (currentState == NONE) {
+                if(!constructionRoad.isEmpty()) {
+                    Iterator<Pair<States,Car>> iter = constructionRoad.values().iterator();
+                    iter.hasNext();
+                    if(newState == iter.next().getKey()) {
                         currentState = newState;
                         nextState = newState;
                         waitUntil = currentTime;
                         askAgain = currentTime+duration;
-                 } else if (newState == NONE ){
+                    } else {
                         currentState = newState;
-                        nextState = currentState;
-                        waitUntil = currentTime;
-                        askAgain = waitUntil+3;
-                } else if (currentState != newState) {
-                        currentState = NONE;
                         nextState = newState;
                         waitUntil = currentTime+tB;
                         askAgain = waitUntil+duration;
+                    }
                 } else {
-                        waitUntil = currentTime;
-                        askAgain = currentTime+duration;
+                    currentState = newState;
+                    nextState = newState;
+                    waitUntil = currentTime;
+                    askAgain = currentTime+duration;
                 }
+            } else if (newState == NONE ){
+                currentState = newState;
+                nextState = currentState;
+                waitUntil = currentTime+intervalBetweenCars;
+                askAgain = waitUntil+duration;
+            } else if (currentState != newState) {
+                currentState = NONE;
+                nextState = newState;
+                waitUntil = currentTime+tB;
+                askAgain = waitUntil+duration;
+            } else {
+                waitUntil = currentTime;
+                askAgain = currentTime+duration;
+            }
         }
 
         /**
@@ -263,17 +283,19 @@ class Controlsystem  {
                     }	
                 }
                 if((askAgain-currentTime)%3 == 1 ) {
-                    if(currentState == IN) {
+                    if(currentState == IN && !inQueue.isEmpty()) {
                             driveIn(inQueue.poll());
-                    } else if(currentState == OUT) {
+                    } else if(currentState == OUT && !outQueue.isEmpty()) {
                             driveIn(outQueue.poll());
                     }
                 }
                 if (constructionRoad.containsKey(currentTime)) {
                     Pair<States,Car> pair = constructionRoad.get(currentTime);
                     constructionRoad.remove(currentTime);
+                    if (pair.getValue() == null)
+                        System.out.println("PAIR.VALUE!!!");
                     if (pair.getKey() == IN)
-                            parking.parkCar(pair.getValue(), pair.getValue().getParkingDuration() + currentTime);
+                        parking.parkCar(pair.getValue(), pair.getValue().getParkingDuration() + currentTime);
                 }
             }
         }
