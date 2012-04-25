@@ -234,7 +234,6 @@ class Controlsystem  {
                         waitUntil = currentTime;
                         askAgain = currentTime+duration;
                     } else {
-                        currentState = newState;
                         nextState = newState;
                         waitUntil = currentTime+tB;
                         askAgain = waitUntil+duration;
