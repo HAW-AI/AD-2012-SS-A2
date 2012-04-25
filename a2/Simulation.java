@@ -24,7 +24,7 @@ class SimulationImpl implements Simulation {
         this.io = io;
         timer = new Timer();
         int[] data = io.readSimFile();
-        cs = new Controlsystem(data[4], timer, data[5]);
+        cs = new Controlsystem(data[4], data[5]);
         street = new Street(cs, data[0], data[1], data[2], data[3]);
         timer.addObserver(cs.parking);
         timer.addObserver(cs.tlc);
@@ -34,7 +34,7 @@ class SimulationImpl implements Simulation {
     SimulationImpl(int a1, int a2, int e1, int e2, int tb, int maxDuration, IOManager io) {
         this.io = io;
         timer = new Timer();
-        cs = new Controlsystem(tb, timer, maxDuration);
+        cs = new Controlsystem(tb, maxDuration);
         street = new Street(cs, a1, a2, e1, e2);
         timer.addObserver(cs.parking);
         timer.addObserver(cs.tlc);
