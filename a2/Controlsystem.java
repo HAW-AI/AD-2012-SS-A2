@@ -199,8 +199,6 @@ class Controlsystem  {
             askAgain = tlc.askAgain;
             waitUntil = tlc.waitUntil;
             for(Entry<Integer, Pair<States,Car>> entry : tlc.constructionRoad.entrySet()) {
-                if (entry.getValue() == null)
-                    System.out.println("TrafficLightController(tlc)");
                 constructionRoad.put(entry.getKey(), entry.getValue());
             }
         }
@@ -292,8 +290,6 @@ class Controlsystem  {
                 if (constructionRoad.containsKey(currentTime)) {
                     Pair<States,Car> pair = constructionRoad.get(currentTime);
                     constructionRoad.remove(currentTime);
-                    if (pair.getValue() == null)
-                        System.out.println("PAIR.VALUE!!!");
                     if (pair.getKey() == IN)
                         parking.parkCar(pair.getValue(), pair.getValue().getParkingDuration() + currentTime);
                 }
